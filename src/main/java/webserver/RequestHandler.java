@@ -2,11 +2,15 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RequestHandler implements Runnable{
     Socket connection;
+
+    private static final String indexPath = "./webapp/index.html";
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
     public RequestHandler(Socket connection) {
@@ -20,13 +24,36 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
+//            HTML Request Message
+//            startLine 분석
+            String startLine = br.readLine();
+            System.out.println(startLine);
+            String[] startLineEntity = startLine.split(" ");
+            String method = startLineEntity[0];
+            String url = startLineEntity[1];
+            String version = startLineEntity[2];
+            System.out.printf("Method : %s\nurl : %s\nversion : %s\n", method, url, version);
+
+            byte[] body = "Hello Wrold".getBytes();
+
+            if (method.equals("GET") && requestHomePage(url)) {
+                try{
+                    body = Files.readAllBytes(Paths.get(indexPath));
+//                    body = Files.readAllBytes(new File(indexPath).toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             response200Header(dos, body.length);
             responseBody(dos, body);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
+    }
+
+    private boolean requestHomePage(String target) {
+        return target.equals("/") || target.equals("/index.html");
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
