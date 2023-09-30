@@ -21,6 +21,7 @@ public class RequestHandler implements Runnable{
     private static final String userFormPath = "./webapp/user/form.html";
     private static final String loginPath = "./webapp/user/login.html";
     private static final String loginFailPath = "./webapp/user/login_failed.html";
+    private static final String userListPath = "./webapp/user/list.html";
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
     private final MemoryUserRepository repository = MemoryUserRepository.getInstance();
@@ -46,14 +47,23 @@ public class RequestHandler implements Runnable{
             String version = startLineEntity[2];
 //            header 분석
             int requestContentLength = 0;
+            Boolean cookie = false;
             while (true) {
                 final String line = br.readLine();
-//                System.out.println(line);
+                System.out.println(line);
                 if (line.equals("")) {  //header까지만
                     break;
                 }
                 if (line.startsWith("Content-Length")) {    //method가 POST의 경우 body가 존재 따라서 Content-Length(body의 길이)가 존재
+//                    Content-Length: 54
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if (line.startsWith("Cookie")) {
+//                    Cookie: logined=true; Studio-67c3efe2=ac12c024-e90a-47ec-8f0e-e7e5bfef794f; Idea-14db931f=ced96671-df75-4a9c-b1b1-c2b4b443f986
+                    cookie = false;
+                    if (line.contains("true")) {
+                        cookie = true;
+                    }
                 }
             }
 
@@ -130,6 +140,19 @@ public class RequestHandler implements Runnable{
                     body = Files.readAllBytes(Paths.get(loginFailPath));
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+            }
+
+//            GET /user/userList HTTP/1.1
+            if (method.equals("GET") && url.equals("/user/userList")) {
+                if (cookie) {
+                    try{
+                        body = Files.readAllBytes(Paths.get(userListPath));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    response302Header(dos, "/index.html");
                 }
             }
 
