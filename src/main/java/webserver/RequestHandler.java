@@ -19,6 +19,8 @@ public class RequestHandler implements Runnable{
 
     private static final String indexPath = "./webapp/index.html";
     private static final String userFormPath = "./webapp/user/form.html";
+    private static final String loginPath = "./webapp/user/login.html";
+    private static final String loginFailPath = "./webapp/user/login_failed.html";
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
     private final MemoryUserRepository repository = MemoryUserRepository.getInstance();
@@ -86,12 +88,45 @@ public class RequestHandler implements Runnable{
                 repository.addUser(newUser);
                 System.out.println(repository.findAll().stream().count());
                 response302Header(dos, "/index.html");
-                try{
+                /*try{
                     body = Files.readAllBytes(Paths.get(indexPath));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }*/
+            }
+
+//            GET /user/login.html HTTP/1.1
+            if (method.equals("GET") && url.equals("/user/login.html")) {
+                try{
+                    body = Files.readAllBytes(Paths.get(loginPath));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
+
+//            POST /user/login HTTP/1.1
+            if (method.equals("POST") && url.equals("/user/login")) {
+                String queryString = IOUtils.readData(br, requestContentLength);
+                System.out.println(queryString);
+                Map<String, String> queryParameter = getQueryParameter(queryString);
+                User findUser = repository.findUserById(queryParameter.get("userId"));
+                if (findUser == null) {
+                    response302Header(dos, "/user/login_failed.html");
+                }
+                if (findUser != null) {
+                    response302WithCookieHeader(dos, "/index.html");
+                }
+            }
+
+//            GET /user/login_failed HTTP/1.1
+            if (method.equals("GET") && url.equals("/user/login_failed.html")) {
+                try{
+                    body = Files.readAllBytes(Paths.get(loginFailPath));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -119,6 +154,17 @@ public class RequestHandler implements Runnable{
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response302WithCookieHeader(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Cookie: logined=true \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
