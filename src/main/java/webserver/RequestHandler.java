@@ -114,7 +114,13 @@ public class RequestHandler implements Runnable{
                     response302Header(dos, "/user/login_failed.html");
                 }
                 if (findUser != null) {
-                    response302WithCookieHeader(dos, "/index.html");
+                    Boolean a = findUser.getPassword().equals(queryParameter.get("password"));
+                    if (a) {
+                        response302WithCookieHeader(dos, "/index.html");
+                    }
+                    if (!a) {
+                        response302Header(dos, "/user/login_failed.html");
+                    }
                 }
             }
 
