@@ -11,6 +11,7 @@ public class RequestHandler implements Runnable{
     Socket connection;
 
     private static final String indexPath = "./webapp/index.html";
+    private static final String userFormPath = "./webapp/user/form.html";
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
     public RequestHandler(Socket connection) {
@@ -32,7 +33,6 @@ public class RequestHandler implements Runnable{
             String method = startLineEntity[0];
             String url = startLineEntity[1];
             String version = startLineEntity[2];
-            System.out.printf("Method : %s\nurl : %s\nversion : %s\n", method, url, version);
 
             byte[] body = "Hello Wrold".getBytes();
 
@@ -40,6 +40,16 @@ public class RequestHandler implements Runnable{
                 try{
                     body = Files.readAllBytes(Paths.get(indexPath));
 //                    body = Files.readAllBytes(new File(indexPath).toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+//            http://localhost/user/form.html
+//            GET /user/form.html HTTP/1.1
+//            GET /favicon.ico HTTP/1.1
+            if (method.equals("GET") && url.equals("/user/form.html")) {
+                try{
+                    body = Files.readAllBytes(Paths.get(userFormPath));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
