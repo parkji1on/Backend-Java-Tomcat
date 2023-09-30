@@ -36,6 +36,7 @@ public class RequestHandler implements Runnable{
 
             byte[] body = "Hello Wrold".getBytes();
 
+//            GET / HTTP/1.1, GET /index.html HTTP/1.1
             if (method.equals("GET") && requestHomePage(url)) {
                 try{
                     body = Files.readAllBytes(Paths.get(indexPath));
@@ -44,9 +45,8 @@ public class RequestHandler implements Runnable{
                     e.printStackTrace();
                 }
             }
-//            http://localhost/user/form.html
+
 //            GET /user/form.html HTTP/1.1
-//            GET /favicon.ico HTTP/1.1
             if (method.equals("GET") && url.equals("/user/form.html")) {
                 try{
                     body = Files.readAllBytes(Paths.get(userFormPath));
@@ -54,6 +54,8 @@ public class RequestHandler implements Runnable{
                     e.printStackTrace();
                 }
             }
+
+//            POST /user/signup HTTP/1.1
             response200Header(dos, body.length);
             responseBody(dos, body);
 
