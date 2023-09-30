@@ -22,6 +22,7 @@ public class RequestHandler implements Runnable{
     private static final String loginPath = "./webapp/user/login.html";
     private static final String loginFailPath = "./webapp/user/login_failed.html";
     private static final String userListPath = "./webapp/user/list.html";
+    private static final String cssPath = "./webapp/css/styles.css";
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
     private final MemoryUserRepository repository = MemoryUserRepository.getInstance();
@@ -50,7 +51,7 @@ public class RequestHandler implements Runnable{
             Boolean cookie = false;
             while (true) {
                 final String line = br.readLine();
-                System.out.println(line);
+//                System.out.println(line);
                 if (line.equals("")) {  //header까지만
                     break;
                 }
@@ -74,6 +75,16 @@ public class RequestHandler implements Runnable{
                 try{
                     body = Files.readAllBytes(Paths.get(indexPath));
 //                    body = Files.readAllBytes(new File(indexPath).toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+//            GET /css/styles.css HTTP/1.1
+//            Accept: text/css,*/*;q=0.1
+            if (method.equals("GET") && url.equals("/css/styles.css")) {
+                try{
+                    body = Files.readAllBytes(Paths.get(cssPath));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -156,7 +167,7 @@ public class RequestHandler implements Runnable{
                 }
             }
 
-            response200Header(dos, body.length);
+            response200Header(dos, body.length, url);
             responseBody(dos, body);
 
         } catch (IOException e) {
@@ -168,10 +179,14 @@ public class RequestHandler implements Runnable{
         return target.equals("/") || target.equals("/index.html");
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String url) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            if (url.contains(".css")) {
+                dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            } else {
+                dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            }
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
